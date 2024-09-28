@@ -1,5 +1,5 @@
 ﻿/*
- * HmOpenVSCodeFromHidemaru v 1.0.0.1
+ * HmOpenVSCodeFromHidemaru v 1.0.0.2
  * Copyright (C) 2021 Akitsugu Komiyama
  * under the MIT License
  */ 
@@ -64,6 +64,13 @@ if ( #LINENO_UNICODE < #SCREEN_TOP_LINENO || #SCREEN_TOP_LINENO + windowheight <
     #COLUMN_UNICODE = 0;
 }
 
+// エラーというよりは警告レベルなので、アウトプット枠への表示
+if ($ERROR_MSG != "") {
+    #OUTPUT = loaddll("HmOutputPane.dll");
+    #ret=dllfunc(#OUTPUT, "Output",hidemaruhandle(0), $ERROR_MSG + "\n");
+    endmacro;
+}
+
 // 対象のディレクトリを作業場として、対象のファイルをunicodeベース換算でのlinenoとcolumn
 runex sprintf(@"""%s"" -n -g ""%s"" ""%s:%d:%d"" ", $VSCODE_ABSOLUTE_PATH, $GIT_DIRECTORY, filename2, #LINENO_UNICODE, #COLUMN_UNICODE+1)
     , 0     //sync   0:async, 1:sync
@@ -79,8 +86,3 @@ runex sprintf(@"""%s"" -n -g ""%s"" ""%s:%d:%d"" ", $VSCODE_ABSOLUTE_PATH, $GIT_
     , 0     //extended flags
 ; 
 
-// エラーというよりは警告レベルなので、アウトプット枠への表示
-if ($ERROR_MSG != "") {
-    #OUTPUT = loaddll("HmOutputPane.dll");
-    #ret=dllfunc(#OUTPUT, "Output",hidemaruhandle(0), $ERROR_MSG + "\n");
-}
