@@ -1,0 +1,2 @@
+﻿// 外部コマンドの呼び出し
+execmacro currentmacrodirectory + "\\HmOpenVSCodeFromHidemaru.mac", "scm";

@@ -1,11 +1,13 @@
 ﻿/*
- * HmOpenVSCodeFromHidemaru v 1.0.0.2
- * Copyright (C) 2021 Akitsugu Komiyama
+ * HmOpenVSCodeFromHidemaru v 1.1.0.2
+ * Copyright (C) 2021-2024 Akitsugu Komiyama
  * under the MIT License
  */ 
 
 // もしも「Visual Studio Codeが発見できない」というエラーが出た場合には、Visual Studio Codeの「code.cmd」ファイルへのフルパスを「$VSCODE_ABSOLUTE_PATH」へと代入しておくこと。
 $VSCODE_ABSOLUTE_PATH = "";
+
+$launch_mode = getarg(0);
 
 #HMNET = loaddll( hidemarudir + @"\hm.NET.dll" );
 
@@ -24,6 +26,8 @@ if ( !#HMNET ) {
 // リポジトリに帰属していないようであれば、このファイルがあるディレクトリをオープン対象とする。
 
 if ($GIT_DIRECTORY == "") {
+    // リポジトリに所属していないのであれば、vscodeをリポジトリで開く指定自体を取り消す。
+    if ($launch_mode == "scm") { $launch_mode = ""; }
     $GIT_DIRECTORY = directory2;
 }
 
@@ -71,8 +75,18 @@ if ($ERROR_MSG != "") {
     endmacro;
 }
 
-// 対象のディレクトリを作業場として、対象のファイルをunicodeベース換算でのlinenoとcolumn
-runex sprintf(@"""%s"" -n -g ""%s"" ""%s:%d:%d"" ", $VSCODE_ABSOLUTE_PATH, $GIT_DIRECTORY, filename2, #LINENO_UNICODE, #COLUMN_UNICODE+1)
+
+if ($launch_mode=="scm") {
+	// 対象のディレクトリを作業場として、対象のファイルをunicodeベース換算でのlinenoとcolumn
+	$command = sprintf(@"""%s"" -n -g ""%s"" ""%s:%d:%d"" --extensionDevelopmentPath=""%s"" ", $VSCODE_ABSOLUTE_PATH, $GIT_DIRECTORY, filename2, #LINENO_UNICODE, #COLUMN_UNICODE+1, currentmacrodirectory + "\\vscode_extension");
+
+} else {
+	// 対象のディレクトリを作業場として、対象のファイルをunicodeベース換算でのlinenoとcolumn
+	$command = sprintf(@"""%s"" -n -g ""%s"" ""%s:%d:%d"" ", $VSCODE_ABSOLUTE_PATH, $GIT_DIRECTORY, filename2, #LINENO_UNICODE, #COLUMN_UNICODE+1); 
+
+}
+
+runex $command
     , 0     //sync   0:async, 1:sync
     , 0, "" //stdin  0:none, 1:auto, 2:<file, 3:(reserved),
             //       4:current content, 5:selection
@@ -85,4 +99,3 @@ runex sprintf(@"""%s"" -n -g ""%s"" ""%s:%d:%d"" ", $VSCODE_ABSOLUTE_PATH, $GIT_
     , 0     //encode 0:ansi, 2:utf-16, 6:utf-8
     , 0     //extended flags
 ; 
-
