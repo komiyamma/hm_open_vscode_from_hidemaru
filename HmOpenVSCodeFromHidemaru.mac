@@ -1,5 +1,5 @@
 ﻿/*
- * HmOpenVSCodeFromHidemaru v 1.1.0.2
+ * HmOpenVSCodeFromHidemaru v 1.1.0.4
  * Copyright (C) 2021-2024 Akitsugu Komiyama
  * under the MIT License
  */ 
@@ -20,7 +20,6 @@ if ( !#HMNET ) {
 
 // 「$GIT_DIRECTORY」にはファイルがリポジトリに属している場合に、リポジトリのディレクトリが渡ってくる。
 // リポジトリに属していない場合には、空白が返ってくる。
-// 「#LINENO_UNICODE」「#COLUMN_UNICODE」には 「Unicodeベースでカウント」した場合のカーソルの「行」と「カラム」が渡ってくる。
 // 「$VSCODE_ABSOLUTE_PATH」にはレジストリ情報から探して、Visual Studio Codeのcode.exeのフルパスが入る。
 
 // リポジトリに帰属していないようであれば、このファイルがあるディレクトリをオープン対象とする。
@@ -59,6 +58,8 @@ if ($VSCODE_ABSOLUTE_PATH == "") {
 
 // 秀丸内で映っている画面の最初の行は、lineno換算（エディタ的）では何行目？
 #SCREEN_TOP_LINENO = ytolineno( 0, screentopy );
+#LINENO_UNICODE = lineno;
+#COLUMN_UNICODE = column_wcs;
 
 // カーソルが画面からはみ出ているか？ （正確な判定をするにはあまりに迂遠なので、簡易判定）
 if ( #LINENO_UNICODE < #SCREEN_TOP_LINENO || #SCREEN_TOP_LINENO + windowheight < #LINENO_UNICODE ) {
@@ -75,6 +76,11 @@ if ($ERROR_MSG != "") {
     endmacro;
 }
 
+// VSCodeにディレクトリを伝える際に、なぜかルートディレクトリだと、
+// 例えば、R:\ではなく"R:\\" という形であることが望まれる
+if (strstr($GIT_DIRECTORY, "\\") == strlen($GIT_DIRECTORY)-1) {
+    $GIT_DIRECTORY = $GIT_DIRECTORY + "\\";
+}
 
 if ($launch_mode=="scm") {
 	// 対象のディレクトリを作業場として、対象のファイルをunicodeベース換算でのlinenoとcolumn

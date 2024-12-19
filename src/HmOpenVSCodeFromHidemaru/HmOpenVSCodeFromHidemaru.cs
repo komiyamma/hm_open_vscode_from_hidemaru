@@ -183,9 +183,6 @@ namespace HmOpenVSCodeFromHidemaru
 
             try
             {
-                Hm.Macro.Var["#LINENO_UNICODE"] = Hm.Edit.CursorPos.LineNo;
-                Hm.Macro.Var["#COLUMN_UNICODE"] = Hm.Edit.CursorPos.Column;
-
                 HmOpenVSCodeFromHidemaru cmd = new HmOpenVSCodeFromHidemaru(target_file);
                 string git_dir = cmd.GetAttributeGitDirectory();
                 Hm.Macro.Var["$GIT_DIRECTORY"] = git_dir;
