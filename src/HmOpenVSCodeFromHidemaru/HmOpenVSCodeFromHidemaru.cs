@@ -11,8 +11,6 @@ namespace HmOpenVSCodeFromHidemaru
     {
         const string strHmMacroErrorMsgVariable = "$ERROR_MSG";
 
-        const string strHmMacroVSCodeAbsolutePathVariable = "$VSCODE_ABSOLUTE_PATH";
-
         const string strCmdGit = "git";
         const string strCmdGit_RevParse_GitDir = "rev-parse --git-dir";
         // const string strCmdGit_Args_RevParse_IsInSideWorkTree = "rev-parse --is-inside-work-tree";
@@ -45,62 +43,6 @@ namespace HmOpenVSCodeFromHidemaru
             {
                 throw new FileNotFoundException(targetFileDirectory);
             }
-        }
-
-        private string GetVisualStudioCodePath()
-        {
-            string vscode_path = (string)Hm.Macro.Var[strHmMacroVSCodeAbsolutePathVariable];
-            if (String.IsNullOrEmpty(vscode_path))
-            {
-                // 操作するレジストリ・キーの名前
-                string rKeyName = @"Applications\Code.exe\shell\open";
-                // 取得処理を行う対象となるレジストリの値の名前
-                string rGetValueName = "Icon";
-
-                // レジストリの取得
-                try
-                {
-                    // レジストリ・キーのパスを指定してレジストリを開く
-                    RegistryKey rKey = Registry.ClassesRoot.OpenSubKey(rKeyName);
-                    // レジストリの値を取得
-
-                    vscode_path = (string)rKey.GetValue(rGetValueName);
-
-                    // 開いたレジストリ・キーを閉じる
-                    rKey.Close();
-                }
-                catch (NullReferenceException e)
-                {
-                    vscode_path = "";
-                }
-            }
-
-            if (String.IsNullOrEmpty(vscode_path))
-            {
-                // 操作するレジストリ・キーの名前
-                string rKeyName = @"SOFTWARE\Classes\Applications\Code.exe\shell\open";
-                // 取得処理を行う対象となるレジストリの値の名前
-                string rGetValueName = "Icon";
-
-                // レジストリの取得
-                try
-                {
-                    // レジストリ・キーのパスを指定してレジストリを開く
-                    RegistryKey rKey = Registry.CurrentUser.OpenSubKey(rKeyName);
-                    // レジストリの値を取得
-
-                    vscode_path = (string)rKey.GetValue(rGetValueName);
-
-                    // 開いたレジストリ・キーを閉じる
-                    rKey.Close();
-                }
-                catch (NullReferenceException e)
-                {
-                    vscode_path = "";
-                }
-            }
-
-            return vscode_path;
         }
 
         public string GetAttributeGitDirectory()
@@ -186,10 +128,6 @@ namespace HmOpenVSCodeFromHidemaru
                 HmOpenVSCodeFromHidemaru cmd = new HmOpenVSCodeFromHidemaru(target_file);
                 string git_dir = cmd.GetAttributeGitDirectory();
                 Hm.Macro.Var["$GIT_DIRECTORY"] = git_dir;
-
-                string vscode_path = cmd.GetVisualStudioCodePath();
-                vscode_path = vscode_path.Replace("\"", ""); // ダブルコーテーションは削除
-                Hm.Macro.Var[strHmMacroVSCodeAbsolutePathVariable] = vscode_path;
 
                 cmd = null;
 

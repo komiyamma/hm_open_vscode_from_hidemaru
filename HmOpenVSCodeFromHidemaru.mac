@@ -1,11 +1,11 @@
 ﻿/*
- * HmOpenVSCodeFromHidemaru v 1.1.0.4
+ * HmOpenVSCodeFromHidemaru v 1.1.0.5
  * Copyright (C) 2021-2024 Akitsugu Komiyama
  * under the MIT License
  */ 
 
 // もしも「Visual Studio Codeが発見できない」というエラーが出た場合には、Visual Studio Codeの「code.cmd」ファイルへのフルパスを「$VSCODE_ABSOLUTE_PATH」へと代入しておくこと。
-$VSCODE_ABSOLUTE_PATH = "";
+$VSCODE_ABSOLUTE_PATH = @"";
 
 $launch_mode = getarg(0);
 
@@ -20,8 +20,6 @@ if ( !#HMNET ) {
 
 // 「$GIT_DIRECTORY」にはファイルがリポジトリに属している場合に、リポジトリのディレクトリが渡ってくる。
 // リポジトリに属していない場合には、空白が返ってくる。
-// 「$VSCODE_ABSOLUTE_PATH」にはレジストリ情報から探して、Visual Studio Codeのcode.exeのフルパスが入る。
-
 // リポジトリに帰属していないようであれば、このファイルがあるディレクトリをオープン対象とする。
 
 if ($GIT_DIRECTORY == "") {
@@ -30,8 +28,35 @@ if ($GIT_DIRECTORY == "") {
     $GIT_DIRECTORY = directory2;
 }
 
-// レジストリ情報からVisual Studio Codeのパスが見つからなかった。
-// インストーラは利用せず、Zip解凍のような形でVisual Studio Codeを展開して動作させている？ 手動でパスを通しているかチェック
+// ユーザーにより、$VSCODE_ABSOLUTE_PATH が指定されていない場合、Visual Studio Code がインストールされているディレクトリを探す。
+if ($VSCODE_ABSOLUTE_PATH == "") {
+    // まず普通にインストールしていれば、レジストリに登録されている
+    openreg "CLASSESROOT", @"Applications\Code.exe\shell\open";
+    // フォルダは掘られてる
+    if (result != 0) {
+        $VSCODE_ABSOLUTE_PATH = getregstr("Icon");
+        $VSCODE_ABSOLUTE_PATH = strreplace($VSCODE_ABSOLUTE_PATH, "\"", "");
+        // 実際にはそこにはファイルが無いなら、取り消し
+        if (!existfile($VSCODE_ABSOLUTE_PATH)) {
+            $VSCODE_ABSOLUTE_PATH = "";
+        }
+    }
+    closereg;
+}
+if ($VSCODE_ABSOLUTE_PATH == "") {
+    // まず普通にインストールしていれば、レジストリに登録されている
+    openreg "CURRENTUSER", @"SOFTWARE\Classes\Applications\Code.exe\shell\open";
+    // フォルダは掘られてる
+    if (result != 0) {
+        $VSCODE_ABSOLUTE_PATH = getregstr("Icon");
+        $VSCODE_ABSOLUTE_PATH = strreplace($VSCODE_ABSOLUTE_PATH, "\"", "");
+        // 実際にはそこにはファイルが無いなら、取り消し
+        if (!existfile($VSCODE_ABSOLUTE_PATH)) {
+            $VSCODE_ABSOLUTE_PATH = "";
+        }
+    }
+    closereg;
+}
 if ($VSCODE_ABSOLUTE_PATH == "") {
     // Whereで見つかるようなら手動でパスを通しているのだろう。
     runex "where code.cmd" ,1,0,"",0,"",0,"",0,"",2,0,0,0; 
