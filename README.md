@@ -2,7 +2,7 @@
 
 ![HmOpenVSCodeFromHidemaru v1.2.0](https://img.shields.io/badge/HmOpenVSCodeFromHidemaru-v1.2.0-6479ff.svg)
 [![MIT](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](LICENSE)
-![Hidemaru 8.73](https://img.shields.io/badge/Hidemaru-v8.73-6479ff.svg)
+![Hidemaru 9.25](https://img.shields.io/badge/Hidemaru-v9.25-6479ff.svg)
 
 秀丸で今開いているファイルをVSCodeで開くためのコンポーネントです。
 
