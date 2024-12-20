@@ -108,12 +108,12 @@ if (strstr($GIT_DIRECTORY, "\\") == strlen($GIT_DIRECTORY)-1) {
 }
 
 if ($launch_mode=="scm") {
-	// 対象のディレクトリを作業場として、対象のファイルをunicodeベース換算でのlinenoとcolumn
-	$command = sprintf(@"""%s"" -n -g ""%s"" ""%s:%d:%d"" --extensionDevelopmentPath=""%s"" ", $VSCODE_ABSOLUTE_PATH, $GIT_DIRECTORY, filename2, #LINENO_UNICODE, #COLUMN_UNICODE+1, currentmacrodirectory + "\\vscode_extension");
+    // 対象のディレクトリを作業場として、対象のファイルをunicodeベース換算でのlinenoとcolumn
+    $command = sprintf(@"""%s"" -n -g ""%s"" ""%s:%d:%d"" --extensionDevelopmentPath=""%s"" ", $VSCODE_ABSOLUTE_PATH, $GIT_DIRECTORY, filename2, #LINENO_UNICODE, #COLUMN_UNICODE+1, currentmacrodirectory + "\\vscode_extension");
 
 } else {
-	// 対象のディレクトリを作業場として、対象のファイルをunicodeベース換算でのlinenoとcolumn
-	$command = sprintf(@"""%s"" -n -g ""%s"" ""%s:%d:%d"" ", $VSCODE_ABSOLUTE_PATH, $GIT_DIRECTORY, filename2, #LINENO_UNICODE, #COLUMN_UNICODE+1); 
+    // 対象のディレクトリを作業場として、対象のファイルをunicodeベース換算でのlinenoとcolumn
+    $command = sprintf(@"""%s"" -n -g ""%s"" ""%s:%d:%d"" ", $VSCODE_ABSOLUTE_PATH, $GIT_DIRECTORY, filename2, #LINENO_UNICODE, #COLUMN_UNICODE+1); 
 
 }
 
