@@ -1,5 +1,5 @@
 ﻿/*
- * HmOpenVSCodeFromHidemaru v 1.2.0.3
+ * HmOpenVSCodeFromHidemaru v 1.2.0.4
  * Copyright (C) 2021-2024 Akitsugu Komiyama
  * under the MIT License
  */ 
@@ -20,10 +20,12 @@ var fso = createobject("Scripting.FileSystemObject");
 
 var openMode = getarg(0);
 
-// postExecMacroMemory中でも利用するため、このマクロのディレク鵜鳥を控えておく
+// postExecMacroMemory中でも利用するため、このマクロのディレクトリを控えておく
 // (※ postExecMacroMemory中はcurrentmacrodirectoryは消失するため)
 var currentMacroDirectory = currentmacrodirectory();
 
+// 非同期なのでファイルパスが変更になってしまう可能性が僅かにあるため、控えておく
+var currentFileFullPath = hidemaru.getFileFullPath();
 
 // VSCodeのパスを探す
 function getVSCodeAbsolutePath() {
@@ -90,11 +92,10 @@ var gitRootDir = ""; // ちょっと格好悪いが、syncOpenVSCodeは同期で
 
 try {
 
-    var fileFullPath = hidemaru.getFileFullPath();
-    if (fileFullPath) {
+    if (currentFileFullPath) {
 
         // gitのコマンドを発行して、対象のファイルがどこかのローカルリポジトリに所得しているのかを探す
-        var currentFileDir = fso.GetParentFolderName(fileFullPath);
+        var currentFileDir = fso.GetParentFolderName(currentFileFullPath);
         var gitProcess = hidemaru.runProcess("git rev-parse --absolute-git-dir", currentFileDir, "stdio", "sjis");
 
         // gitが無いんですが!!
@@ -103,8 +104,8 @@ try {
 
         // 非同期用の標準出力・標準エラーのコールバック関数の設定
         } else {
-            gitProcess.stdOut.onReadAll(readOutAsync);
-            gitProcess.stdErr.onReadAll(readErrAsync);
+            gitProcess.stdOut.onReadAll(readStdOutAsync);
+            gitProcess.stdErr.onReadAll(readStdErrAsync);
         }
 
     // ファイル開いてないなら、そのままVSCodeを(ファイルを開かずに)起動。
@@ -116,7 +117,7 @@ try {
 }
 
 
-function readOutAsync(outputText) {
+function readStdOutAsync(outputText) {
     // C:/bbbb/cccc/.git みたいな形で出てくる
     var gitDir = outputText;
     gitDir = gitDir.replace(/\//g, "\\");
@@ -134,7 +135,7 @@ function readOutAsync(outputText) {
     syncOpenVSCode();
 }
 
-function readErrAsync(outputText) {
+function readStdErrAsync(outputText) {
     gitRootDir = ""; // gitRootDirは発見できなかった
     syncOpenVSCode();
 }
@@ -155,7 +156,7 @@ function openVSCode() {
     if (!vscodeAbsolutePath) { return; }
 
     // ファイルなし
-    if (!hidemaru.getFileFullPath()) {
+    if (!currentFileFullPath) {
         // 対象のファイルなし
         var command = sprintf(@"""%s"" ", vscodeAbsolutePath);
         openVSCodeCommand(command);
@@ -166,7 +167,7 @@ function openVSCode() {
 
     // リポジトリが見つかっていなければ、現在のファイルのディレクトリをワークスペースとする
     if (gitRootDir == "") {
-        var currentFileDir = fso.GetParentFolderName(hidemaru.getFileFullPath());
+        var currentFileDir = fso.GetParentFolderName(currentFileFullPath);
         workSpaceDir = currentFileDir;
 
         // 自動的にリポジトリへと移動するモードなら、リポジトリ発見できてないのでscm取りやめ
@@ -186,11 +187,11 @@ function openVSCode() {
     if (openMode == "scm") {
 
         // 対象のディレクトリを作業場として、対象のファイルをunicodeベース換算でのlinenoとcolumn
-        var command = sprintf(@"""%s"" -n -g ""%s"" ""%s:%d:%d"" --extensionDevelopmentPath=""%s"" ", vscodeAbsolutePath, workSpaceDir, hidemaru.getFileFullPath(), cursorPos.lineno, cursorPos.column + 1, currentMacroDirectory + "\\vscode_extension");
+        var command = sprintf(@"""%s"" -n -g ""%s"" ""%s:%d:%d"" --extensionDevelopmentPath=""%s"" ", vscodeAbsolutePath, workSpaceDir, currentFileFullPath, cursorPos.lineno, cursorPos.column + 1, currentMacroDirectory + "\\vscode_extension");
     } else {
 
         // 対象のディレクトリを作業場として、対象のファイルをunicodeベース換算でのlinenoとcolumn
-        var command = sprintf(@"""%s"" -n -g ""%s"" ""%s:%d:%d"" ", vscodeAbsolutePath, workSpaceDir, hidemaru.getFileFullPath(), cursorPos.lineno, cursorPos.column + 1);
+        var command = sprintf(@"""%s"" -n -g ""%s"" ""%s:%d:%d"" ", vscodeAbsolutePath, workSpaceDir, currentFileFullPath, cursorPos.lineno, cursorPos.column + 1);
     }
 
     openVSCodeCommand(command);
