@@ -1,5 +1,5 @@
 ﻿/*
- * HmOpenVSCodeFromHidemaru v 1.2.0.2
+ * HmOpenVSCodeFromHidemaru v 1.2.0.3
  * Copyright (C) 2021-2024 Akitsugu Komiyama
  * under the MIT License
  */ 
@@ -18,7 +18,7 @@ var vscodeAbsolutePath = @"";
 
 var fso = createobject("Scripting.FileSystemObject");
 
-var mode = getarg(0);
+var openMode = getarg(0);
 
 // postExecMacroMemory中でも利用するため、このマクロのディレク鵜鳥を控えておく
 // (※ postExecMacroMemory中はcurrentmacrodirectoryは消失するため)
@@ -95,16 +95,16 @@ try {
 
         // gitのコマンドを発行して、対象のファイルがどこかのローカルリポジトリに所得しているのかを探す
         var currentFileDir = fso.GetParentFolderName(fileFullPath);
-        var git_process = hidemaru.runProcess("git rev-parse --absolute-git-dir", currentFileDir, "stdio", "sjis");
+        var gitProcess = hidemaru.runProcess("git rev-parse --absolute-git-dir", currentFileDir, "stdio", "sjis");
 
         // gitが無いんですが!!
-        if (!git_process) {
+        if (!gitProcess) {
             throw "git コマンドにパスが通っていません";
 
         // 非同期用の標準出力・標準エラーのコールバック関数の設定
         } else {
-            git_process.stdOut.onReadAll(readOutAsync);
-            git_process.stdErr.onReadAll(readErrAsync);
+            gitProcess.stdOut.onReadAll(readOutAsync);
+            gitProcess.stdErr.onReadAll(readErrAsync);
         }
 
     // ファイル開いてないなら、そのままVSCodeを(ファイルを開かずに)起動。
@@ -118,12 +118,16 @@ try {
 
 function readOutAsync(outputText) {
     // C:/bbbb/cccc/.git みたいな形で出てくる
-    gitRootDir = outputText;
-    gitRootDir = gitRootDir.replace(/\//g, "\\");
-    gitRootDir = fso.GetParentFolderName(gitRootDir);
+    var gitDir = outputText;
+    gitDir = gitDir.replace(/\//g, "\\");
+    gitDir = fso.GetParentFolderName(gitDir);
+
+    // フォルダは確かにあります。採用
+    if (fso.FolderExists(gitDir)) {
+        gitRootDir = gitDir;
 
     // そんなフォルダはねぇぞ！
-    if (!fso.FolderExists(gitRootDir)) {
+    } else {
         gitRootDir = ""; // 得体のしれないもの。不採用
     }
 
@@ -166,7 +170,7 @@ function openVSCode() {
         workSpaceDir = currentFileDir;
 
         // 自動的にリポジトリへと移動するモードなら、リポジトリ発見できてないのでscm取りやめ
-        if (mode == "scm") { mode = ""; }
+        if (openMode == "scm") { openMode = ""; }
     }
 
     // 謎だが最後が「\」で終わっている場合、１つ「\」を付け加える必要がある。VSCodeの解釈の問題だろう
@@ -179,7 +183,7 @@ function openVSCode() {
 
 
     // ソースビューを最初からオープンに
-    if (mode == "scm") {
+    if (openMode == "scm") {
 
         // 対象のディレクトリを作業場として、対象のファイルをunicodeベース換算でのlinenoとcolumn
         var command = sprintf(@"""%s"" -n -g ""%s"" ""%s:%d:%d"" --extensionDevelopmentPath=""%s"" ", vscodeAbsolutePath, workSpaceDir, hidemaru.getFileFullPath(), cursorPos.lineno, cursorPos.column + 1, currentMacroDirectory + "\\vscode_extension");
