@@ -152,6 +152,11 @@ function openVSCode() {
         if (mode == "scm") { mode = ""; }
     }
 
+    // 謎だが最後が「\」で終わっている場合、１つ「\」を付け加える必要がある。VSCodeの解釈の問題だろう
+    if (workSpaceDir[workSpaceDir.length-1] == "\\") {
+        workSpaceDir = workSpaceDir + "\\";
+    }
+
     // VSCodeで開くカーソルポジションの取得
     var cursorPos = calcCenterPosition();
 
