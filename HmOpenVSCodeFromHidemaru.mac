@@ -1,5 +1,5 @@
 ﻿/*
- * HmOpenVSCodeFromHidemaru v 1.2.0.4
+ * HmOpenVSCodeFromHidemaru v 1.2.0.5
  * Copyright (C) 2021-2024 Akitsugu Komiyama
  * under the MIT License
  */ 
@@ -68,29 +68,20 @@ function getVSCodeAbsolutePath() {
         }
     }
 
-    // vscodeのパス自体が見つかってないか、パスは見つかったがそこにファイルが存在しない
-    if (!vscodeAbsolutePath || !fso.FileExists(vscodeAbsolutePath)) {
-        throw "Visual Studio Codeが発見できませんでした。\nマクロ「HmOpenVSCodeFromHidemaru.mac」を編集し、変数「VSCodeAbsoluePath」にVisual Studio Codeのパスを設定してください。";
-    }
-
     return vscodeAbsolutePath;
 }
 
 
+var gitRootDir = ""; // ちょっと格好悪いが、syncOpenVSCodeは同期で伝えるので、gitRootDirはグローバルにしておく。
+
 try {
     // VSCodeは、PCにちゃんと入っとるんか？
     vscodeAbsolutePath = getVSCodeAbsolutePath();
-} catch (e) {
-    message(e);
 
-    // 本当はここでマクロを終わらせたいが、スマートに終了できないｗ
-    // なのでこのまま流す...
-}
-
-var gitRootDir = ""; // ちょっと格好悪いが、syncOpenVSCodeは同期で伝えるので、gitRootDirはグローバルにしておく。
-
-
-try {
+    // vscodeのパス自体が見つかってないか、パスは見つかったがそこにファイルが存在しない
+    if (!vscodeAbsolutePath || !fso.FileExists(vscodeAbsolutePath)) {
+        throw "Visual Studio Codeが発見できませんでした。\nマクロ「HmOpenVSCodeFromHidemaru.mac」を編集し、変数「VSCodeAbsoluePath」にVisual Studio Codeのパスを設定してください。";
+    }
 
     if (currentFileFullPath) {
 
@@ -110,8 +101,9 @@ try {
 
     // ファイル開いてないなら、そのままVSCodeを(ファイルを開かずに)起動。
     } else {
-        syncOpenVSCode();
+        openVSCodeNoArgs();
     }
+
 } catch (e) {
     message(e);
 }
@@ -140,28 +132,47 @@ function readStdErrAsync(outputText) {
     syncOpenVSCode();
 }
 
-// 非同期だと使えない関数等があるので同期で
+
+// 非同期だと使えない関数等があるので同期で。非同期から同期にするための関数
 function syncOpenVSCode() {
+
+    var command = "js {openVSCode()}";
+
+    // 予約という形にすることで、postExecMacroMemoryでのスケジュールが被ったとしても、リトライできるように。
+    var isScheduled = 0;
+
+    // まずは軽くジャブ(99.98％くらいはこれだけで実行できるだろう)
     hidemaru.setTimeout(
         function () {
-            hidemaru.postExecMacroMemory("js {openVSCode()}")
+            isScheduled = hidemaru.postExecMacroMemory(command)
         }
         , 0
     );
+
+    // 「他のマクロのpostExecMacroMemory」と「このマクロのpostExecMacroMemory」の実行が「ジャスト衝突」することで、予約が被り、
+    // 秀丸側から「こちらのpostExecMacroMemoryの実行」が「キャンセル」された場合に備えたカバーリトライ。0.3秒間隔で成功するまで。
+    var peRetry = hidemaru.setInterval( function() {
+        if (isScheduled === 0) {
+            isScheduled = hidemaru.postExecMacroMemory(command);
+        }
+        if (isScheduled !==0 ) { hidemaru.clearInterval(peRetry); }
+    }, 300);
 }
 
-// VSCodeを指定のファイル、指定のディレクトリ(ワークスペース想定)、指定のポジションで開く
+// 何も引数なしでVSCodeを実行するだけ
+function openVSCodeNoArgs() {
+    // 対象のファイルなし
+    var command = sprintf(@"""%s"" ", vscodeAbsolutePath);
+    openVSCodeCommand(command);
+}
+
+// 同期関数。VSCodeを指定のファイル、指定のディレクトリ(ワークスペース想定)、指定のポジションで開く
 function openVSCode() {
 
     if (!vscodeAbsolutePath) { return; }
 
     // ファイルなし
-    if (!currentFileFullPath) {
-        // 対象のファイルなし
-        var command = sprintf(@"""%s"" ", vscodeAbsolutePath);
-        openVSCodeCommand(command);
-        return;
-	}
+    if (!currentFileFullPath) { return; }
 
     var workSpaceDir = gitRootDir;
 
@@ -186,12 +197,18 @@ function openVSCode() {
     // ソースビューを最初からオープンに
     if (openMode == "scm") {
 
-        // 対象のディレクトリを作業場として、対象のファイルをunicodeベース換算でのlinenoとcolumn
-        var command = sprintf(@"""%s"" -n -g ""%s"" ""%s:%d:%d"" --extensionDevelopmentPath=""%s"" ", vscodeAbsolutePath, workSpaceDir, currentFileFullPath, cursorPos.lineno, cursorPos.column + 1, currentMacroDirectory + "\\vscode_extension");
+        // ソースビューへと自動で移行。対象のリポジトリを作業場として、対象のファイルをunicodeベース換算でのlinenoとcolumn
+        var command = sprintf("""
+                              "%s" -n -g "%s" "%s:%d:%d" --extensionDevelopmentPath="%s"
+                              """,
+                              vscodeAbsolutePath, workSpaceDir, currentFileFullPath, cursorPos.lineno, cursorPos.column + 1, currentMacroDirectory + "\\vscode_extension");
     } else {
 
         // 対象のディレクトリを作業場として、対象のファイルをunicodeベース換算でのlinenoとcolumn
-        var command = sprintf(@"""%s"" -n -g ""%s"" ""%s:%d:%d"" ", vscodeAbsolutePath, workSpaceDir, currentFileFullPath, cursorPos.lineno, cursorPos.column + 1);
+        var command = sprintf("""
+                              "%s" -n -g "%s" "%s:%d:%d"
+                              """,
+                              vscodeAbsolutePath, workSpaceDir, currentFileFullPath, cursorPos.lineno, cursorPos.column + 1);
     }
 
     openVSCodeCommand(command);
