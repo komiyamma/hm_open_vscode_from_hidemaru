@@ -1,0 +1,129 @@
+﻿jsmode "JScript\\" + currentmacrodirectory;
+
+js {
+
+debuginfo(2);
+var gitProcess = null;
+var fso = createobject("Scripting.FileSystemObject");
+
+var openMode = getarg(0);
+
+// postExecMacroMemory中でも利用するため、このマクロのディレクトリを控えておく
+// (※ postExecMacroMemory中はcurrentmacrodirectoryは消失するため)
+var currentMacroDirectory = currentmacrodirectory();
+
+// 非同期なのでファイルパスが変更になってしまう可能性が僅かにあるため、控えておく
+var currentFileFullPath = hidemaru.getFileFullPath();
+
+try {
+    // gitのコマンドを発行して、対象のファイルがどこかのローカルリポジトリに所得しているのかを探す
+    var currentFileDir = fso.GetParentFolderName(currentFileFullPath);
+    var gitProcess = hidemaru.runProcess("git rev-parse --absolute-git-dir", currentFileDir, "stdio", "utf8");
+
+    // gitが無いんですが!!
+    if (!gitProcess) {
+        throw "git コマンドにパスが通っていません";
+
+    // 非同期用の標準出力・標準エラーのコールバック関数の設定
+    } else {
+        gitProcess.stdOut.onReadAll(readStdOutAsync);
+        gitProcess.stdErr.onReadAll(readStdErrAsync);
+    }
+
+} catch (e) {
+    console.log(e);
+}
+
+
+function readStdOutAsync(outputText) {
+    // C:/bbbb/cccc/.git みたいな形で出てくる
+    var gitDir = outputText;
+    gitDir = gitDir.replace(/\//g, "\\");
+    gitDir = fso.GetParentFolderName(gitDir);
+
+    // フォルダは確かにあります。採用
+    if (fso.FolderExists(gitDir)) {
+console.log(gitDir);
+abc(gitDir);
+    // そんなフォルダはねぇぞ！
+    }
+
+}
+
+function readStdErrAsync(outputText) {
+}
+
+var gitStatusProcess = null;
+var gitRootDir = "";
+function abc(gitDir) {
+    gitRootDir = gitDir;
+	gitStatusProcess = hidemaru.runProcess("git status --porcelain", gitDir, "stdio", "sjis");
+    gitStatusProcess.stdOut.onReadAll(readStatusStdOutAsync);
+    gitStatusProcess.stdErr.onReadAll(readStatusStdErrAsync);
+}
+
+function readStatusStdOutAsync(outputText) {
+console.log(outputText);
+    var count = outputText.split("\n").length;
+console.log(count);
+    if (count > 0) {
+        ddd(gitRootDir);
+    }
+}
+
+function readStatusStdErrAsync(outputText) {
+}
+
+var gitBranchNameProcess  = null;
+var BranchName = "";
+function ddd(gitDir) {
+    // git branch --show-current
+	gitBranchNameProcess = hidemaru.runProcess("git branch --show-current", gitDir, "stdio", "sjis");
+    gitBranchNameProcess.stdOut.onReadAll(readBranchStdOutAsync);
+    gitBranchNameProcess.stdErr.onReadAll(readBranchStdErrAsync);
+}
+
+function readBranchStdOutAsync(outputText) {
+console.log(outputText);
+BranchName = outputText;
+    eee(gitRootDir);
+}
+
+function readBranchStdErrAsync(outputText) {
+}
+
+var gitRemoteProcess  = null;
+var RemoteName = "";
+function eee(gitDir) {
+    // git branch --show-current
+	gitRemoteProcess = hidemaru.runProcess("git remote", gitDir, "stdio", "sjis");
+    gitRemoteProcess.stdOut.onReadAll(readRemoteStdOutAsync);
+    gitRemoteProcess.stdErr.onReadAll(readRemoteStdErrAsync);
+}
+
+function readRemoteStdOutAsync(outputText) {
+RemoteName = outputText;
+fff(gitRootDir, BranchName, RemoteName);
+console.log(outputText);
+}
+
+function readRemoteStdErrAsync(outputText) {
+}
+
+var gitRemoteDiffProcess = null;
+function fff(gitDir, branch, remote) {
+	gitRemoteDiffProcess = hidemaru.runProcess("git diff --name-only " + RemoteName + "/" + BranchName, gitDir, "stdio", "sjis");
+    gitRemoteDiffProcess.stdOut.onReadAll(readRemoteDiffStdOutAsync);
+    gitRemoteDiffProcess.stdErr.onReadAll(readRemoteDiffStdErrAsync);
+}
+
+function readRemoteDiffStdOutAsync(outputText) {
+console.log(outputText);
+}
+
+function readRemoteDiffStdErrAsync(outputText) {
+console.log(outputText);
+}
+
+
+}
