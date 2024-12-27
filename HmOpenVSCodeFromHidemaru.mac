@@ -1,5 +1,5 @@
 ﻿/*
- * HmOpenVSCodeFromHidemaru v 1.2.0.5
+ * HmOpenVSCodeFromHidemaru v 1.2.0.6
  * Copyright (C) 2021-2024 Akitsugu Komiyama
  * under the MIT License
  */ 
@@ -73,6 +73,7 @@ function getVSCodeAbsolutePath() {
 
 
 var gitRootDir = ""; // ちょっと格好悪いが、syncOpenVSCodeは同期で伝えるので、gitRootDirはグローバルにしておく。
+var gitProcess = null;
 
 try {
     // VSCodeは、PCにちゃんと入っとるんか？
@@ -87,7 +88,7 @@ try {
 
         // gitのコマンドを発行して、対象のファイルがどこかのローカルリポジトリに所得しているのかを探す
         var currentFileDir = fso.GetParentFolderName(currentFileFullPath);
-        var gitProcess = hidemaru.runProcess("git rev-parse --absolute-git-dir", currentFileDir, "stdio", "sjis");
+        gitProcess = hidemaru.runProcess("git rev-parse --absolute-git-dir", currentFileDir, "stdio", "sjis");
 
         // gitが無いんですが!!
         if (!gitProcess) {
