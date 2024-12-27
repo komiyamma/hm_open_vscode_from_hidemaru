@@ -37,7 +37,7 @@ try {
 
 function readStdOutAsync(outputText) {
     // C:/bbbb/cccc/.git みたいな形で出てくる
-    var gitDir = outputText;
+    var gitDir = outputText.replace("\n", "");
     gitDir = gitDir.replace(/\//g, "\\");
     gitDir = fso.GetParentFolderName(gitDir);
 
@@ -56,7 +56,7 @@ function readStdErrAsync(outputText) {
 var gitStatusProcess = null;
 var gitRootDir = "";
 function abc(gitDir) {
-    gitRootDir = gitDir;
+    gitRootDir = gitDir.replace("\n", "");
 	gitStatusProcess = hidemaru.runProcess("git status --porcelain", gitDir, "stdio", "sjis");
     gitStatusProcess.stdOut.onReadAll(readStatusStdOutAsync);
     gitStatusProcess.stdErr.onReadAll(readStatusStdErrAsync);
@@ -85,7 +85,7 @@ function ddd(gitDir) {
 
 function readBranchStdOutAsync(outputText) {
 console.log(outputText);
-BranchName = outputText;
+BranchName = outputText.replace("\n", "");
     eee(gitRootDir);
 }
 
@@ -102,7 +102,7 @@ function eee(gitDir) {
 }
 
 function readRemoteStdOutAsync(outputText) {
-RemoteName = outputText;
+RemoteName = outputText.replace("\n", "");
 fff(gitRootDir, BranchName, RemoteName);
 console.log(outputText);
 }
@@ -112,17 +112,21 @@ function readRemoteStdErrAsync(outputText) {
 
 var gitRemoteDiffProcess = null;
 function fff(gitDir, branch, remote) {
+console.log("git diff --name-only " + RemoteName + "/" + BranchName);
+console.log(gitDir);
 	gitRemoteDiffProcess = hidemaru.runProcess("git diff --name-only " + RemoteName + "/" + BranchName, gitDir, "stdio", "sjis");
     gitRemoteDiffProcess.stdOut.onReadAll(readRemoteDiffStdOutAsync);
     gitRemoteDiffProcess.stdErr.onReadAll(readRemoteDiffStdErrAsync);
 }
 
 function readRemoteDiffStdOutAsync(outputText) {
-console.log(outputText);
+    var count = outputText.split("\n").length;
+console.log(outputText.replace("\n", ""));
+console.log(JSON.stringify(count));
 }
 
 function readRemoteDiffStdErrAsync(outputText) {
-console.log(outputText);
+console.log("Err:" + outputText);
 }
 
 
