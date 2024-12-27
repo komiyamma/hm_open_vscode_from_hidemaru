@@ -11,6 +11,8 @@ var currentMacroDirectory = currentmacrodirectory();
 var currentFileFullPath = hidemaru.getFileFullPath();
 
 var gitProcess = null;
+
+function aab() {
 try {
     // gitのコマンドを発行して、対象のファイルがどこかのローカルリポジトリに所得しているのかを探す
     var currentFileDir = fso.GetParentFolderName(currentFileFullPath);
@@ -29,11 +31,12 @@ try {
 } catch (e) {
     console.log(e);
 }
+}
 
+aab();
 
 function readStdOutAsync(outputText) {
-
-    gitProcess.kill();
+console.log("あれ？");
 
     // C:/bbbb/cccc/.git みたいな形で出てくる
     var gitDir = outputText.replace("\n", "");
@@ -46,12 +49,15 @@ function readStdOutAsync(outputText) {
         abc(gitDir);
         // そんなフォルダはねぇぞ！
     }
+    gitProcess.kill();
+    gitProcess = null;
 
 }
 
 function readStdErrAsync(outputText) {
-    gitProcess.kill();
     console.log("bbb");
+    gitProcess.kill();
+    gitProcess = null;
 }
 
 var gitStatusProcess = null;
@@ -64,18 +70,20 @@ function abc(gitDir) {
 }
 
 function readStatusStdOutAsync(outputText) {
-    gitStatusProcess.kill();
     console.log(outputText);
     var count = outputText.split("\n").length;
     console.log(count);
     if (count > 0) {
         ddd(gitRootDir);
     }
+    gitStatusProcess.kill();
+    gitStatusProcess = null;
 }
 
 function readStatusStdErrAsync(outputText) {
-    gitStatusProcess.kill();
     console.log("aaa");
+    gitStatusProcess.kill();
+    gitStatusProcess = null;
 }
 
 var gitBranchNameProcess = null;
@@ -88,15 +96,17 @@ function ddd(gitDir) {
 }
 
 function readBranchStdOutAsync(outputText) {
-    gitBranchNameProcess.kill();
     console.log(outputText);
     BranchName = outputText.replace("\n", "");
     eee(gitRootDir);
+    gitBranchNameProcess.kill();
+ gitBranchNameProcess = null;
 }
 
 function readBranchStdErrAsync(outputText) {
-    gitBranchNameProcess.kill();
     console.log("ccc");
+    gitBranchNameProcess.kill();
+ gitBranchNameProcess = null;
 }
 
 var gitRemoteProcess = null;
@@ -109,14 +119,16 @@ function eee(gitDir) {
 }
 
 function readRemoteStdOutAsync(outputText) {
-    gitRemoteProcess.kill();
     RemoteName = outputText.replace("\n", "");
     fff(gitRootDir, BranchName, RemoteName);
     console.log(outputText);
+    gitRemoteProcess.kill();
+ gitRemoteProcess = null;
 }
 
 function readRemoteStdErrAsync(outputText) {
     gitRemoteProcess.kill();
+ gitRemoteProcess = null;
 }
 
 var gitRemoteDiffProcess = null;
@@ -129,16 +141,18 @@ function fff(gitDir, branch, remote) {
 }
 
 function readRemoteDiffStdOutAsync(outputText) {
-    gitRemoteDiffProcess.kill();
     var count = outputText.split("\n").length;
     console.log(outputText.replace("\n", ""));
     console.log(JSON.stringify(count));
-}
+   gitRemoteDiffProcess.kill();
+ gitRemoteDiffProcess = null;
+ }
 
 function readRemoteDiffStdErrAsync(outputText) {
-    gitRemoteDiffProcess.kill();
     console.log("Err:" + outputText);
-}
+   gitRemoteDiffProcess.kill();
+ gitRemoteDiffProcess = null;
+ }
 
 
 
