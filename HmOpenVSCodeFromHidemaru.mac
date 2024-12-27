@@ -124,12 +124,13 @@ function readStdOutAsync(outputText) {
     } else {
         gitRootDir = ""; // 得体のしれないもの。不採用
     }
-
+    gitProcess.kill();
     syncOpenVSCode();
 }
 
 function readStdErrAsync(outputText) {
     gitRootDir = ""; // gitRootDirは発見できなかった
+    gitProcess.kill();
     syncOpenVSCode();
 }
 
