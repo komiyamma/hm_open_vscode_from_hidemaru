@@ -1,5 +1,5 @@
 ﻿/*
- * HmOpenVSCodeFromHidemaru v 1.2.0.7
+ * HmOpenVSCodeFromHidemaru v 1.2.0.8
  * Copyright (C) 2021-2024 Akitsugu Komiyama
  * under the MIT License
  */ 
@@ -101,6 +101,7 @@ function findGitDir() {
             } else {
                 gitProcess.stdOut.onReadAll(readStdOutAsync);
                 gitProcess.stdErr.onReadAll(readStdErrAsync);
+                gitProcess.onClose(onCloseGitProcess);
             }
 
         // ファイル開いてないなら、そのままVSCodeを(ファイルを開かずに)起動。
@@ -129,18 +130,19 @@ function readStdOutAsync(outputText) {
     } else {
         gitRootDir = ""; // 得体のしれないもの。不採用
     }
-    gitProcess.kill();
-    gitProcess = null;
     syncOpenVSCode();
 }
 
 function readStdErrAsync(outputText) {
     gitRootDir = ""; // gitRootDirは発見できなかった
-    gitProcess.kill();
-    gitProcess = null;
     syncOpenVSCode();
 }
 
+
+function onCloseGitProcess() {
+    gitProcess.kill();
+    gitProcess = null;
+}
 
 // 非同期だと使えない関数等があるので同期で。非同期から同期にするための関数
 function syncOpenVSCode() {
