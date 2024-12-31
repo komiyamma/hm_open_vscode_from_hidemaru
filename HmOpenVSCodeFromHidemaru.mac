@@ -1,5 +1,5 @@
 ﻿/*
- * HmOpenVSCodeFromHidemaru v 1.2.0.8
+ * HmOpenVSCodeFromHidemaru v 1.2.0.9
  * Copyright (C) 2021-2024 Akitsugu Komiyama
  * under the MIT License
  */ 
@@ -91,7 +91,7 @@ function findGitDir() {
 
             // gitのコマンドを発行して、対象のファイルがどこかのローカルリポジトリに所得しているのかを探す
             var currentFileDir = fso.GetParentFolderName(currentFileFullPath);
-            gitProcess = hidemaru.runProcess("git rev-parse --absolute-git-dir", currentFileDir, "stdio", "sjis");
+            gitProcess = hidemaru.runProcess("git rev-parse --absolute-git-dir", currentFileDir, "stdio", "utf8");
 
             // gitが無いんですが!!
             if (!gitProcess) {
@@ -134,7 +134,6 @@ function readStdOutAsync(outputText) {
 }
 
 function readStdErrAsync(outputText) {
-    gitRootDir = ""; // gitRootDirは発見できなかった
     syncOpenVSCode();
 }
 
