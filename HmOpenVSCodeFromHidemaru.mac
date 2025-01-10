@@ -1,5 +1,5 @@
 ﻿/*
- * HmOpenVSCodeFromHidemaru v 1.2.0.9
+ * HmOpenVSCodeFromHidemaru v 1.2.1.1
  * Copyright (C) 2021-2024 Akitsugu Komiyama
  * under the MIT License
  */ 
@@ -29,7 +29,7 @@ var currentFileFullPath = hidemaru.getFileFullPath();
 function getVSCodeAbsolutePath() {
     if (!vscodeAbsolutePath) {
         try {
-            var success = openreg("CLASSESROOT", @"Applications\Code.exe\shell\open");
+            var success = openreg("CLASSESROOT", "Applications\\Code.exe\\shell\\open");
             if (success) {
                 vscodeAbsolutePath = getregstr("Icon");
                 vscodeAbsolutePath = vscodeAbsolutePath.replace(/"/g, '');
@@ -40,7 +40,7 @@ function getVSCodeAbsolutePath() {
     }
     if (!vscodeAbsolutePath) {
         try {
-            var success = openreg("CURRENTUSER", @"SOFTWARE\Classes\Applications\Code.exe\shell\open");
+            var success = openreg("CURRENTUSER", "SOFTWARE\\Classes\\Applications\\Code.exe\\shell\\open");
             if (success) {
                 vscodeAbsolutePath = getregstr("Icon");
                 vscodeAbsolutePath = vscodeAbsolutePath.replace(/"/g, '');
@@ -170,7 +170,7 @@ function syncOpenVSCode() {
 // 何も引数なしでVSCodeを実行するだけ
 function openVSCodeNoArgs() {
     // 対象のファイルなし
-    var command = sprintf(@"""%s"" ", vscodeAbsolutePath);
+    var command = sprintf('"%s"', vscodeAbsolutePath);
     openVSCodeCommand(command);
 }
 
@@ -206,16 +206,12 @@ function openVSCode() {
     if (openMode == "scm") {
 
         // ソースビューへと自動で移行。対象のリポジトリを作業場として、対象のファイルをunicodeベース換算でのlinenoとcolumn
-        var command = sprintf("""
-                              "%s" -n -g "%s" "%s:%d:%d" --extensionDevelopmentPath="%s"
-                              """,
+        var command = sprintf('"%s" -n -g "%s" "%s:%d:%d" --extensionDevelopmentPath="%s"',
                               vscodeAbsolutePath, workSpaceDir, currentFileFullPath, cursorPos.lineno, cursorPos.column + 1, currentMacroDirectory + "\\vscode_extension");
     } else {
 
         // 対象のディレクトリを作業場として、対象のファイルをunicodeベース換算でのlinenoとcolumn
-        var command = sprintf("""
-                              "%s" -n -g "%s" "%s:%d:%d"
-                              """,
+        var command = sprintf('"%s" -n -g "%s" "%s:%d:%d"',
                               vscodeAbsolutePath, workSpaceDir, currentFileFullPath, cursorPos.lineno, cursorPos.column + 1);
     }
 
