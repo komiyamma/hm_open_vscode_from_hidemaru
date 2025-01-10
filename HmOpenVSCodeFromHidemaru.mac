@@ -6,8 +6,6 @@
 
 hidemaruversion "9.25.99";
 
-$launch_mode = getarg(0);
-
 jsmode "JScript\\" + currentmacrofilename;
 js {
 
