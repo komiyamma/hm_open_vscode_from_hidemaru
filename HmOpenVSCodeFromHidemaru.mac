@@ -187,7 +187,7 @@ function openVSCode() {
     var workSpaceDir = gitRootDir;
 
     // リポジトリが見つかっていなければ、現在のファイルのディレクトリをワークスペースとする
-    if (gitRootDir == "") {
+    if (!gitRootDir) {
         var currentFileDir = fso.GetParentFolderName(currentFileFullPath);
         workSpaceDir = currentFileDir;
 
