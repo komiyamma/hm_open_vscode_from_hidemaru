@@ -1,6 +1,6 @@
 # HmOpenVSCodeFromHidemaru
 
-![HmOpenVSCodeFromHidemaru latest release](https://img.shields.io/github/v/release/komiyamma/hm_openvscode_from_hidemaru)
+![HmOpenVSCodeFromHidemaru latest release](https://img.shields.io/github/v/release/komiyamma/hm_open_vscode_from_hidemaru)
 [![MIT](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](LICENSE)
 ![Hidemaru 9.35](https://img.shields.io/badge/Hidemaru-v9.35-6479ff.svg)
 
